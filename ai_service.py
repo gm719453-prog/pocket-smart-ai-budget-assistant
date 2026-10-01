@@ -21,8 +21,17 @@ except ImportError:
     GENAI_AVAILABLE = False
     logger.warning("google-genai package is not installed. Run: pip install google-genai")
 
-# Configurable model — override with GEMINI_MODEL env var if needed
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+# Primary model — override with GEMINI_MODEL env var if needed
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+
+# Fallback chain: if primary model is overloaded (503), try these in order
+MODEL_FALLBACK_CHAIN = [
+    "gemini-3.5-flash",
+    "gemini-3.6-flash",
+    "gemini-3.7-flash",
+    "gemini-3.8-flash",
+    "gemini-flash-latest",
+]
 
 
 def build_spending_summary_data(user_id):
@@ -280,11 +289,31 @@ Keep the tone encouraging, objective, and beginner-friendly."""
     try:
         client = genai.Client(api_key=api_key)
 
-        logger.info(f"Calling Gemini model: {GEMINI_MODEL}")
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=prompt
-        )
+        # Build model list: configured model first, then fallbacks
+        models_to_try = [GEMINI_MODEL] + [m for m in MODEL_FALLBACK_CHAIN if m != GEMINI_MODEL]
+        response = None
+        last_error = None
+
+        for model_name in models_to_try:
+            try:
+                logger.info(f"Trying Gemini model: {model_name}")
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt
+                )
+                logger.info(f"Gemini responded successfully using model: {model_name}")
+                break  # success — stop trying
+            except Exception as model_exc:
+                err_msg = str(model_exc)
+                if "503" in err_msg or "UNAVAILABLE" in err_msg or "high demand" in err_msg.lower():
+                    logger.warning(f"Model {model_name} overloaded (503), trying next fallback...")
+                    last_error = model_exc
+                    continue  # try next model
+                else:
+                    raise  # non-503 error — bubble up to outer except
+
+        if response is None:
+            raise last_error or ValueError("All Gemini models are currently unavailable.")
 
         # Extract text from response
         if not response or not response.text:
