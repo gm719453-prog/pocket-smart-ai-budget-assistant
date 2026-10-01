@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <defs>
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="50%" stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#EC4899"/>
+    </linearGradient>
+    <linearGradient id="coinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <!-- Background Rounded Shield -->
+  <rect x="8" y="8" width="64" height="64" rx="20" fill="url(#logoGrad)" filter="url(#glow)"/>
+  <!-- Wallet / Pocket Shape -->
+  <rect x="22" y="28" width="36" height="26" rx="6" fill="#FFFFFF" fill-opacity="0.95"/>
+  <path d="M 22 34 L 58 34" stroke="#6366F1" stroke-width="2"/>
+  <!-- Gold Coin in Pocket -->
+  <circle cx="40" cy="24" r="9" fill="url(#coinGrad)"/>
+  <text x="40" y="28" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#78350F" text-anchor="middle">₹</text>
+  <!-- AI sparkle -->
+  <path d="M 52 16 L 54 20 L 58 22 L 54 24 L 52 28 L 50 24 L 46 22 L 50 20 Z" fill="#FDE047"/>
+</svg>

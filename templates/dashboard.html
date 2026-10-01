@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard – PocketSmart AI{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Here's your complete money overview in one place.{% endblock %}
+
+{% block content %}
+<!-- Welcome & Quick Action Banner -->
+<div class="glass-panel p-4 mb-4 position-relative overflow-hidden">
+  <div class="row align-items-center g-3">
+    <div class="col-md-8">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="fs-4">👋</span>
+        <h3 class="mb-0 text-white">Welcome back, <span class="gradient-text">{{ current_user.name }}</span></h3>
+      </div>
+      <p class="text-secondary mb-0">Track your daily expenses, monitor your budgets, and let AI keep your finances on course.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+      <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+        <a href="{{ url_for('add_expense') }}" class="btn btn-primary-smart">
+          <i class="fas fa-plus-circle"></i> Add Expense
+        </a>
+        {% if income == 0 and total_expenses == 0 %}
+          <form action="{{ url_for('populate_demo_data') }}" method="POST" class="d-inline">
+            <button type="submit" class="btn btn-outline-smart" title="Populate with sample student finances for testing">
+              <i class="fas fa-magic text-warning"></i> Load Demo Data
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 1. Real-time Budget Alerts (if any) -->
+{% if budget_alerts %}
+  <div class="mb-4">
+    {% for alert in budget_alerts %}
+      <div class="alert alert-{{ alert.type }} bg-{{ alert.type }} bg-opacity-10 border-{{ alert.type }} border-opacity-50 text-white d-flex align-items-center justify-content-between p-3 rounded-3 mb-2 shadow-sm">
+        <div class="d-flex align-items-center gap-3">
+          <i class="fas {% if alert.type == 'danger' %}fa-exclamation-triangle text-danger{% else %}fa-exclamation-circle text-warning{% endif %} fs-4"></i>
+          <div>
+            <strong>{{ alert.category }} Alert:</strong> {{ alert.message }}
+          </div>
+        </div>
+        <a href="{{ url_for('budget') }}" class="btn btn-sm btn-outline-light">Manage Budget</a>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<!-- 2. Six Financial Metric Cards with Count-up Animation -->
+<div class="stats-grid">
+  <!-- Monthly Income Card -->
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <span class="stat-card-title">Monthly Income</span>
+      <div class="stat-icon-badge badge-income">
+        <i class="fas fa-wallet"></i>
+      </div>
+    </div>
+    <div class="stat-card-value text-white" data-countup="{{ income }}" data-prefix="{{ currency }}">
+      {{ currency }}{{ "%.2f"|format(income) }}
+    </div>
+    <div class="stat-card-meta d-flex justify-content-between align-items-center">
+      <span>Monthly earnings</span>
+      <a href="{{ url_for('income') }}" class="text-primary small text-decoration-none">Edit <i class="fas fa-pen small"></i></a>
+    </div>
+  </div>
+
+  <!-- Monthly Budget Card -->
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <span class="stat-card-title">Monthly Budget</span>
+      <div class="stat-icon-badge badge-budget">
+        <i class="fas fa-chart-pie"></i>
+      </div>
+    </div>
+    <div class="stat-card-value text-white" data-countup="{{ total_budget }}" data-prefix="{{ currency }}">
+      {{ currency }}{{ "%.2f"|format(total_budget) }}
+    </div>
+    <div class="stat-card-meta">
+      <span>{{ summary.category_budgets|length }} categories tracked</span>
+    </div>
+  </div>
+
+  <!-- Total Expenses Card -->
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <span class="stat-card-title">Total Expenses</span>
+      <div class="stat-icon-badge badge-expense">
+        <i class="fas fa-receipt"></i>
+      </div>
+    </div>
+    <div class="stat-card-value text-danger" data-countup="{{ total_expenses }}" data-prefix="{{ currency }}">
+      {{ currency }}{{ "%.2f"|format(total_expenses) }}
+    </div>
+    <div class="stat-card-meta">
+      <span>Recorded this month</span>
+    </div>
+  </div>
+
+  <!-- Remaining Budget Card -->
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <span class="stat-card-title">Remaining Balance</span>
+      <div class="stat-icon-badge badge-remaining">
+        <i class="fas fa-coins"></i>
+      </div>
+    </div>
+    <div class="stat-card-value text-success" data-countup="{{ remaining_budget }}" data-prefix="{{ currency }}">
+      {{ currency }}{{ "%.2f"|format(remaining_budget) }}
+    </div>
+    <div class="stat-card-meta">
+      <span>Available to spend</span>
+    </div>
+  </div>
+
+  <!-- Total Savings Card -->
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <span class="stat-card-title">Total Savings</span>
+      <div class="stat-icon-badge badge-savings">
+        <i class="fas fa-piggy-bank"></i>
+      </div>
+    </div>
+    <div class="stat-card-value text-warning" data-countup="{{ total_savings }}" data-prefix="{{ currency }}">
+      {{ currency }}{{ "%.2f"|format(total_savings) }}
+    </div>
+    <div class="stat-card-meta">
+      <span>Across active goals</span>
+    </div>
+  </div>
+
+  <!-- Budget Usage % Card -->
+  <div class="stat-card">
+    <div class="stat-card-header">
+      <span class="stat-card-title">Budget Usage</span>
+      <div class="stat-icon-badge badge-usage">
+        <i class="fas fa-percentage"></i>
+      </div>
+    </div>
+    <div class="stat-card-value text-info" data-countup="{{ budget_usage_pct }}" data-suffix="%">
+      {{ budget_usage_pct }}%
+    </div>
+    <div class="stat-card-meta">
+      <div class="progress-bar-custom mt-2">
+        <div class="progress-fill {% if budget_usage_pct >= 100 %}progress-danger{% elif budget_usage_pct >= 85 %}progress-warning{% else %}progress-normal{% endif %}"
+             data-progress-width="{{ budget_usage_pct }}" style="width: 0%;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Visual Charts Grid (Category Doughnut & Monthly Spending Trend) -->
+<div class="charts-grid">
+  <!-- Expense Category Breakdown -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <h4 class="chart-title">Spending by Category</h4>
+        <small class="text-secondary">Distribution of this month's expenses</small>
+      </div>
+      <a href="{{ url_for('expenses') }}" class="btn btn-sm btn-outline-smart">View All</a>
+    </div>
+    <div class="chart-canvas-wrapper">
+      <canvas id="categoryChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Monthly Spending Trajectory -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <h4 class="chart-title">Monthly Spending Trend</h4>
+        <small class="text-secondary">Historical expenditure comparison</small>
+      </div>
+      <span class="badge bg-secondary bg-opacity-25 text-white">Last 6 Months</span>
+    </div>
+    <div class="chart-canvas-wrapper">
+      <canvas id="monthlyTrendChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Recent Transactions & Savings Snapshot -->
+<div class="row g-4">
+  <!-- Recent Expenses Table -->
+  <div class="col-lg-8">
+    <div class="glass-panel p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h4 class="chart-title">Recent Expenses</h4>
+          <small class="text-secondary">Your latest 5 financial activities</small>
+        </div>
+        <a href="{{ url_for('expenses') }}" class="btn btn-sm btn-outline-smart">
+          Full History <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+      </div>
+
+      {% if recent_expenses %}
+        <div class="custom-table-container">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th class="text-end">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for exp in recent_expenses %}
+                <tr>
+                  <td class="text-secondary small">{{ exp.expense_date }}</td>
+                  <td>
+                    <span class="cat-badge cat-{{ exp.category }}">
+                      <i class="fas fa-tag small"></i> {{ exp.category }}
+                    </span>
+                  </td>
+                  <td class="fw-medium">{{ exp.description }}</td>
+                  <td class="text-end fw-bold text-danger">
+                    -{{ currency }}{{ "%.2f"|format(exp.amount) }}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state-box">
+          <div class="empty-icon">📊</div>
+          <h5 class="empty-title">No expenses yet</h5>
+          <p class="empty-desc">Add your first expense to start understanding your spending habits.</p>
+          <a href="{{ url_for('add_expense') }}" class="btn btn-primary-smart">
+            <i class="fas fa-plus"></i> Add First Expense
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Savings Goals Snapshot -->
+  <div class="col-lg-4">
+    <div class="glass-panel p-4 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h4 class="chart-title">Savings Goals</h4>
+          <small class="text-secondary">Milestone progress</small>
+        </div>
+        <a href="{{ url_for('savings') }}" class="btn btn-sm btn-outline-smart">
+          <i class="fas fa-plus"></i>
+        </a>
+      </div>
+
+      {% if savings_goals %}
+        <div class="d-flex flex-column gap-3">
+          {% for goal in savings_goals %}
+            {% set pct = (goal.saved_amount / goal.target_amount * 100) if goal.target_amount > 0 else 0 %}
+            <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color);">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <strong class="text-white">{{ goal.goal_name }}</strong>
+                <span class="badge bg-warning bg-opacity-25 text-warning small">{{ "%.1f"|format(pct) }}%</span>
+              </div>
+              <div class="d-flex justify-content-between text-secondary small mb-2">
+                <span>Saved: {{ currency }}{{ "%.2f"|format(goal.saved_amount) }}</span>
+                <span>Target: {{ currency }}{{ "%.2f"|format(goal.target_amount) }}</span>
+              </div>
+              <div class="progress-bar-custom">
+                <div class="progress-fill progress-normal" data-progress-width="{{ pct }}" style="width: 0%;"></div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state-box py-4">
+          <div class="empty-icon fs-3">🎯</div>
+          <h6 class="empty-title">No savings goals yet</h6>
+          <p class="empty-desc small">Create a goal and start saving toward a new laptop or emergency fund.</p>
+          <a href="{{ url_for('savings') }}" class="btn btn-sm btn-outline-smart">
+            <i class="fas fa-plus"></i> Create Goal
+          </a>
+        </div>
+      {% endif %}
+
+      <!-- AI Insights Quick Banner -->
+      <div class="mt-4 p-3 rounded-3" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.1) 100%); border: 1px solid rgba(99, 102, 241, 0.3);">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <i class="fas fa-robot text-primary fs-5"></i>
+          <strong class="text-white">AI Assistant Ready</strong>
+        </div>
+        <p class="small text-secondary mb-2">Analyze your recorded spending and receive smart advice for next month.</p>
+        <a href="{{ url_for('recommendations') }}" class="btn btn-sm btn-primary-smart w-100 justify-content-center">
+          <i class="fas fa-sparkles"></i> View AI Insights
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}

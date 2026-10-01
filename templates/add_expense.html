@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Add Expense – PocketSmart AI{% endblock %}
+{% block page_title %}Add Expense{% endblock %}
+{% block page_subtitle %}Record a new expenditure to keep your budget on track.{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="glass-panel p-4">
+      <div class="d-flex align-items-center gap-3 mb-4">
+        <div class="stat-icon-badge badge-expense" style="width: 48px; height: 48px; font-size: 1.3rem;">
+          <i class="fas fa-plus"></i>
+        </div>
+        <div>
+          <h4 class="text-white mb-0">Record Transaction</h4>
+          <small class="text-secondary">Fill in the details of your spending</small>
+        </div>
+      </div>
+
+      <form action="{{ url_for('add_expense') }}" method="POST">
+        <!-- Amount -->
+        <div class="form-group-custom mb-3">
+          <label class="form-label-custom" for="amount">Amount ({{ currency }}) *</label>
+          <div class="input-with-icon">
+            <i class="fas fa-money-bill-wave input-icon-left"></i>
+            <input type="number" step="0.01" min="0.01" id="amount" name="amount" class="form-input-custom" placeholder="e.g. 500" required autofocus>
+          </div>
+        </div>
+
+        <!-- Category -->
+        <div class="form-group-custom mb-3">
+          <label class="form-label-custom" for="category">Category *</label>
+          <div class="input-with-icon">
+            <i class="fas fa-tags input-icon-left"></i>
+            <select id="category" name="category" class="form-input-custom" required>
+              <option value="" disabled selected>Select category...</option>
+              {% for cat in categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group-custom mb-3">
+          <label class="form-label-custom" for="description">Description *</label>
+          <div class="input-with-icon">
+            <i class="fas fa-pen input-icon-left"></i>
+            <input type="text" id="description" name="description" class="form-input-custom" placeholder="e.g. Lunch with classmates, Metro recharge..." required>
+          </div>
+        </div>
+
+        <!-- Expense Date -->
+        <div class="form-group-custom mb-4">
+          <label class="form-label-custom" for="expense_date">Date *</label>
+          <div class="input-with-icon">
+            <i class="fas fa-calendar-alt input-icon-left"></i>
+            <input type="date" id="expense_date" name="expense_date" class="form-input-custom" value="{{ current_date }}" required>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary-smart flex-grow-1 justify-content-center py-2">
+            <i class="fas fa-check-circle"></i> ADD EXPENSE
+          </button>
+          <a href="{{ url_for('expenses') }}" class="btn btn-outline-smart py-2">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Monthly Income – PocketSmart AI{% endblock %}
+{% block page_title %}Income Management{% endblock %}
+{% block page_subtitle %}Set your monthly earnings or allowance to calculate accurate budget health.{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <div class="glass-panel p-4 mb-4">
+      <div class="d-flex align-items-center gap-3 mb-4">
+        <div class="stat-icon-badge badge-income" style="width: 52px; height: 52px; font-size: 1.5rem;">
+          <i class="fas fa-wallet"></i>
+        </div>
+        <div>
+          <h4 class="mb-1 text-white">Monthly Income</h4>
+          <p class="text-secondary small mb-0">PocketSmart AI uses your income to calculate remaining discretionary balance.</p>
+        </div>
+      </div>
+
+      <div class="p-3 mb-4 rounded-3 text-center" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2);">
+        <span class="text-secondary small text-uppercase fw-semibold">Current Recorded Income</span>
+        <h2 class="display-6 fw-bold text-success mt-1 mb-0">{{ currency }}{{ "%.2f"|format(income) }}</h2>
+      </div>
+
+      <form action="{{ url_for('update_income') }}" method="POST">
+        <div class="form-group-custom mb-3">
+          <label class="form-label-custom" for="income">Enter Monthly Income Amount ({{ currency }})</label>
+          <div class="input-with-icon">
+            <i class="fas fa-rupee-sign input-icon-left"></i>
+            <input type="number" step="0.01" min="0" id="income" name="income" class="form-input-custom" value="{{ income }}" placeholder="e.g. 25000" required autofocus>
+          </div>
+          <small class="text-muted mt-1 d-block">Includes salary, stipend, family allowance, or freelance earnings.</small>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary-smart flex-grow-1 justify-content-center">
+            <i class="fas fa-save"></i> Save Income
+          </button>
+          <a href="{{ url_for('dashboard') }}" class="btn btn-outline-smart">Cancel</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Helpful Student Guidance Card -->
+    <div class="glass-panel p-4">
+      <h5 class="text-white mb-2"><i class="fas fa-lightbulb text-warning me-2"></i>How is this used?</h5>
+      <ul class="text-secondary small mb-0 ps-3">
+        <li class="mb-2"><strong>Remaining Balance:</strong> Computed as Income minus Total Recorded Expenses.</li>
+        <li class="mb-2"><strong>AI Spending Ratio:</strong> Google Gemini analyzes the percentage of income committed to discretionary vs fixed spending.</li>
+        <li><strong>Dynamic Updates:</strong> Changing this value immediately recalibrates all dashboard metrics.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

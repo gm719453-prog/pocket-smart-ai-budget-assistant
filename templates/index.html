@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PocketSmart AI – Take Control of Your Money with AI</title>
+  <meta name="description" content="PocketSmart AI: Track expenses, manage budgets, understand spending, and receive simple AI-powered insights.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Custom Style -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <!-- Ambient Decorative Background Glows -->
+  <div class="ambient-glow ambient-top-left"></div>
+  <div class="ambient-glow ambient-top-right"></div>
+  <div class="ambient-glow ambient-bottom-right"></div>
+
+  <!-- Landing Navigation -->
+  <nav class="landing-nav">
+    <div class="container d-flex align-items-center justify-content-between">
+      <a href="{{ url_for('index') }}" class="nav-brand-container text-decoration-none">
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="PocketSmart AI Logo" class="brand-logo-img">
+        <span class="brand-title brand-font text-white">Pocket<span class="gradient-text">Smart</span> AI</span>
+      </a>
+      <div class="d-flex align-items-center gap-3">
+        <a href="{{ url_for('login') }}" class="btn btn-outline-smart">Login</a>
+        <a href="{{ url_for('signup') }}" class="btn btn-primary-smart">Get Started</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 1. Hero Section -->
+  <header class="hero-section">
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-6 text-start">
+          <div class="hero-badge">
+            <span class="coin-spin">💰</span>
+            <span>Intelligent Personal Budgeting for Students</span>
+          </div>
+          <h1 class="hero-headline">
+            Take Control of <br>Your Money with <span class="gradient-text">AI</span>
+          </h1>
+          <p class="hero-subheading">
+            Track expenses, manage budgets, understand spending, and get simple AI-powered insights. Designed for students and beginners.
+          </p>
+          <div class="d-flex flex-wrap gap-3 align-items-center">
+            <a href="{{ url_for('signup') }}" class="btn btn-primary-smart px-4 py-3 fs-6">
+              <i class="fas fa-bolt"></i> Get Started Free
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-smart px-4 py-3 fs-6">
+              <i class="fas fa-sign-in-alt"></i> Login
+            </a>
+          </div>
+
+          <!-- Mini trust counters -->
+          <div class="row mt-5 pt-3 border-top border-secondary border-opacity-25">
+            <div class="col-4">
+              <div class="stat-number gradient-text">100%</div>
+              <small class="text-secondary">Free & Secure</small>
+            </div>
+            <div class="col-4">
+              <div class="stat-number gradient-emerald">0.1s</div>
+              <small class="text-secondary">Fast Analytics</small>
+            </div>
+            <div class="col-4">
+              <div class="stat-number text-info">Gemini</div>
+              <small class="text-secondary">Smart AI Insights</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Animated Visual Mockup -->
+        <div class="col-lg-6">
+          <div class="hero-visual-card position-relative">
+            <!-- Floating Pill 1: Budget Alert -->
+            <div class="floating-pill floating-pill-1">
+              <div class="badge-income rounded-circle p-2 d-flex align-items-center justify-content-center">
+                <i class="fas fa-check-circle text-success"></i>
+              </div>
+              <div>
+                <small class="d-block text-secondary" style="font-size:0.75rem;">Budget Health</small>
+                <strong class="text-white">84% Utilized</strong>
+              </div>
+            </div>
+
+            <!-- Floating Pill 2: AI Tip -->
+            <div class="floating-pill floating-pill-2">
+              <div class="badge-usage rounded-circle p-2 d-flex align-items-center justify-content-center">
+                <i class="fas fa-robot text-primary"></i>
+              </div>
+              <div>
+                <small class="d-block text-secondary" style="font-size:0.75rem;">AI Insight</small>
+                <strong class="text-white">Saved ₹6,000 this month!</strong>
+              </div>
+            </div>
+
+            <!-- Simulated Dashboard Preview -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <span class="text-secondary text-uppercase fw-semibold" style="font-size:0.75rem;">Monthly Overview</span>
+                <h4 class="text-white m-0">₹25,000.00</h4>
+              </div>
+              <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 px-3 py-2 rounded-pill">
+                <i class="fas fa-sparkles me-1"></i> Active Assistant
+              </span>
+            </div>
+
+            <div class="row g-3 mb-4">
+              <div class="col-6">
+                <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color);">
+                  <small class="text-secondary">Total Budget</small>
+                  <h5 class="text-white mt-1 mb-0">₹20,000</h5>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color);">
+                  <small class="text-secondary">Spent So Far</small>
+                  <h5 class="text-danger mt-1 mb-0">₹14,000</h5>
+                </div>
+              </div>
+            </div>
+
+            <!-- Progress simulation -->
+            <div class="mb-3">
+              <div class="d-flex justify-content-between text-secondary mb-1" style="font-size:0.8rem;">
+                <span>Monthly Limit Progress</span>
+                <span class="text-white">70%</span>
+              </div>
+              <div class="progress-bar-custom">
+                <div class="progress-fill progress-normal" style="width: 70%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 2. Features Section -->
+  <section class="py-5" style="border-top: 1px solid var(--border-color);">
+    <div class="container py-4">
+      <div class="text-center max-w-700 mx-auto mb-5">
+        <span class="badge bg-primary bg-opacity-25 text-primary px-3 py-2 rounded-pill mb-2">Features</span>
+        <h2 class="display-6 fw-bold">Everything You Need to <span class="gradient-text">Master Your Money</span></h2>
+        <p class="text-secondary">Simple, automated, and intelligent features crafted specifically for college students and beginners.</p>
+      </div>
+
+      <div class="row g-4">
+        <!-- Feature 1 -->
+        <div class="col-md-6 col-lg-4">
+          <div class="glass-panel feature-card">
+            <div class="feature-icon-wrapper">
+              <i class="fas fa-wallet"></i>
+            </div>
+            <h4 class="mb-2">Income & Expense Tracking</h4>
+            <p class="text-secondary">Log daily spending across Food, Travel, Shopping, Bills, and Education with real-time categorizations.</p>
+          </div>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="col-md-6 col-lg-4">
+          <div class="glass-panel feature-card">
+            <div class="feature-icon-wrapper" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.25);">
+              <i class="fas fa-chart-pie"></i>
+            </div>
+            <h4 class="mb-2">Monthly Budget Control</h4>
+            <p class="text-secondary">Set category limits and get visual warnings before you overspend. Know exactly what remains in your wallet.</p>
+          </div>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="col-md-6 col-lg-4">
+          <div class="glass-panel feature-card">
+            <div class="feature-icon-wrapper" style="background: rgba(236, 72, 153, 0.15); color: #ec4899; border-color: rgba(236, 72, 153, 0.25);">
+              <i class="fas fa-robot"></i>
+            </div>
+            <h4 class="mb-2">Google Gemini AI Insights</h4>
+            <p class="text-secondary">Get practical, personalized spending observations and actionable suggestions generated by Google Gemini.</p>
+          </div>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="col-md-6 col-lg-4">
+          <div class="glass-panel feature-card">
+            <div class="feature-icon-wrapper" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.25);">
+              <i class="fas fa-bullseye"></i>
+            </div>
+            <h4 class="mb-2">Savings Goals</h4>
+            <p class="text-secondary">Save for a new laptop, semester fees, or emergency stash with progress percentages and milestone trackers.</p>
+          </div>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="col-md-6 col-lg-4">
+          <div class="glass-panel feature-card">
+            <div class="feature-icon-wrapper" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4; border-color: rgba(6, 182, 212, 0.25);">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <h4 class="mb-2">Dynamic Chart Visuals</h4>
+            <p class="text-secondary">Interactive Chart.js breakdowns showing category shares, monthly spending trajectories, and budget comparisons.</p>
+          </div>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="col-md-6 col-lg-4">
+          <div class="glass-panel feature-card">
+            <div class="feature-icon-wrapper" style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6; border-color: rgba(139, 92, 246, 0.25);">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <h4 class="mb-2">Data Privacy & Security</h4>
+            <p class="text-secondary">Strict per-user data isolation, password hashing, and zero exposure of sensitive financial credentials.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. How It Works Section -->
+  <section class="py-5" style="background: rgba(17, 24, 39, 0.5); border-top: 1px solid var(--border-color);">
+    <div class="container py-4">
+      <div class="text-center max-w-700 mx-auto mb-5">
+        <span class="badge bg-success bg-opacity-25 text-success px-3 py-2 rounded-pill mb-2">Workflow</span>
+        <h2 class="display-6 fw-bold">How PocketSmart AI Works</h2>
+        <p class="text-secondary">Three simple steps to financial clarity and peace of mind.</p>
+      </div>
+
+      <div class="row g-4 text-center">
+        <div class="col-md-4">
+          <div class="glass-panel p-4 h-100">
+            <div class="display-5 fw-bold text-primary mb-3">01</div>
+            <h4>Record Income & Expenses</h4>
+            <p class="text-secondary">Add your monthly income allowance and log expenses as they happen with quick category tagging.</p>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="glass-panel p-4 h-100">
+            <div class="display-5 fw-bold text-info mb-3">02</div>
+            <h4>Set Budgets & Savings</h4>
+            <p class="text-secondary">Assign spending limits for Food, Travel, and Shopping while watching your savings goal fill up.</p>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="glass-panel p-4 h-100">
+            <div class="display-5 fw-bold gradient-text mb-3">03</div>
+            <h4>Receive AI Insights</h4>
+            <p class="text-secondary">Click Generate AI Insights to receive intelligent summaries, alerts, and tailored next-month suggestions.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Footer -->
+  <footer class="landing-footer">
+    <div class="container">
+      <div class="row align-items-center justify-content-between g-4">
+        <div class="col-md-6 text-start">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="PocketSmart AI Logo" class="brand-logo-img">
+            <span class="brand-title brand-font text-white">Pocket<span class="gradient-text">Smart</span> AI</span>
+          </div>
+          <p class="text-secondary small mb-0">Smart Budget & Recommendation Assistant. A college-level AI project designed with Flask, MySQL, Chart.js, and Google Gemini.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <div class="d-flex justify-content-md-end gap-3 mb-2">
+            <a href="{{ url_for('login') }}" class="text-secondary">Login</a>
+            <a href="{{ url_for('signup') }}" class="text-secondary">Sign Up</a>
+            <a href="#features" class="text-secondary">Features</a>
+          </div>
+          <small class="text-muted">© {{ now_year }} PocketSmart AI. Built for academic review and demonstration.</small>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap 5 Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile – PocketSmart AI{% endblock %}
+{% block page_title %}Profile{% endblock %}
+{% block page_subtitle %}Manage your personal account details and credentials.{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="glass-panel p-4 mb-4">
+      <div class="d-flex flex-column flex-sm-row align-items-center gap-4 pb-4 border-bottom border-secondary border-opacity-25">
+        <img src="{{ user.profile_image or url_for('static', filename='images/default-avatar.svg') }}" alt="Profile Picture" class="rounded-circle border border-primary border-3" style="width: 86px; height: 86px; object-fit: cover;">
+        <div class="text-center text-sm-start">
+          <h4 class="text-white mb-1">{{ user.name }}</h4>
+          <p class="text-secondary small mb-2"><i class="fas fa-envelope me-1"></i> {{ user.email }}</p>
+          <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-sm-start">
+            <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 px-3 py-1 rounded-pill">
+              <i class="fas fa-shield-alt me-1"></i> {{ auth_method }}
+            </span>
+            <span class="badge bg-secondary bg-opacity-25 text-white px-3 py-1 rounded-pill">
+              <i class="fas fa-calendar me-1"></i> Member since {{ user.created_at }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Profile Form -->
+      <form action="{{ url_for('profile') }}" method="POST" class="mt-4">
+        <h5 class="text-white mb-3"><i class="fas fa-user-edit text-primary me-2"></i>Account Details</h5>
+        
+        <div class="form-group-custom mb-3">
+          <label class="form-label-custom" for="name">Full Name</label>
+          <div class="input-with-icon">
+            <i class="fas fa-user input-icon-left"></i>
+            <input type="text" id="name" name="name" class="form-input-custom" value="{{ user.name }}" required>
+          </div>
+        </div>
+
+        <div class="form-group-custom mb-3">
+          <label class="form-label-custom" for="email_disabled">Email Address (Read-only)</label>
+          <div class="input-with-icon">
+            <i class="fas fa-envelope input-icon-left"></i>
+            <input type="email" id="email_disabled" class="form-input-custom opacity-75" value="{{ user.email }}" disabled>
+          </div>
+          <small class="text-muted">Primary account email used for security and sign-in.</small>
+        </div>
+
+        {% if not user.google_id %}
+          <hr class="border-secondary border-opacity-25 my-4">
+          <h5 class="text-white mb-3"><i class="fas fa-key text-warning me-2"></i>Change Password (Optional)</h5>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label-custom" for="new_password">New Password</label>
+              <div class="input-with-icon">
+                <i class="fas fa-lock input-icon-left"></i>
+                <input type="password" id="new_password" name="new_password" class="form-input-custom" placeholder="Leave blank to keep current">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label-custom" for="confirm_password">Confirm New Password</label>
+              <div class="input-with-icon">
+                <i class="fas fa-lock input-icon-left"></i>
+                <input type="password" id="confirm_password" name="confirm_password" class="form-input-custom" placeholder="Repeat new password">
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="d-flex justify-content-end gap-2">
+          <button type="submit" class="btn btn-primary-smart px-4">
+            <i class="fas fa-save me-1"></i> Update Profile
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

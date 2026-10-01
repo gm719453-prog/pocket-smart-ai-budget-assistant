@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Savings Goals – PocketSmart AI{% endblock %}
+{% block page_title %}Savings Goals{% endblock %}
+{% block page_subtitle %}Track your progress toward your financial dreams and emergency funds.{% endblock %}
+
+{% block content %}
+<!-- Overview Banner -->
+<div class="glass-panel p-4 mb-4">
+  <div class="row align-items-center g-3">
+    <div class="col-md-7">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <h4 class="text-white mb-0">Savings Portfolio</h4>
+        <span class="badge bg-warning bg-opacity-25 text-warning">{{ goals|length }} Goals</span>
+      </div>
+      <p class="text-secondary small mb-3">Overall milestone progress across all targets.</p>
+
+      <div class="row g-2 text-center">
+        <div class="col-4">
+          <div class="p-2 rounded-3" style="background: rgba(99, 102, 241, 0.1);">
+            <small class="text-secondary d-block">Total Target</small>
+            <strong class="text-white fs-5">{{ currency }}{{ "%.2f"|format(total_target) }}</strong>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-2 rounded-3" style="background: rgba(16, 185, 129, 0.1);">
+            <small class="text-secondary d-block">Total Saved</small>
+            <strong class="text-success fs-5">{{ currency }}{{ "%.2f"|format(total_saved) }}</strong>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-2 rounded-3" style="background: rgba(245, 158, 11, 0.1);">
+            <small class="text-secondary d-block">Completion</small>
+            <strong class="text-warning fs-5">{{ overall_pct }}%</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Create Goal Form -->
+    <div class="col-md-5 border-start-md border-secondary border-opacity-25 ps-md-4">
+      <h5 class="text-white mb-3"><i class="fas fa-bullseye text-warning me-2"></i>Create New Goal</h5>
+      <form action="{{ url_for('add_savings_goal') }}" method="POST">
+        <div class="form-group-custom mb-2">
+          <input type="text" name="goal_name" class="form-input-custom ps-3" placeholder="Goal Name (e.g. New Laptop)" required>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <input type="number" step="0.01" min="1" name="target_amount" class="form-input-custom ps-3" placeholder="Target ({{ currency }})" required>
+          </div>
+          <div class="col-6">
+            <input type="number" step="0.01" min="0" name="saved_amount" class="form-input-custom ps-3" placeholder="Initial Saved ({{ currency }})">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary-smart w-100 justify-content-center">
+          <i class="fas fa-plus"></i> Set Goal
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Goals List -->
+{% if goals %}
+  <div class="row g-4">
+    {% for goal in goals %}
+      <div class="col-md-6 col-lg-4">
+        <div class="glass-panel p-4 h-100 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div>
+                <h5 class="text-white mb-0">{{ goal.goal_name }}</h5>
+                <small class="text-secondary">Target: {{ currency }}{{ "%.2f"|format(goal.target_amount) }}</small>
+              </div>
+              <form action="{{ url_for('delete_savings_goal', goal_id=goal.id) }}" method="POST" onsubmit="return confirm('Delete this savings goal?');">
+                <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="Delete Goal">
+                  <i class="fas fa-trash small"></i>
+                </button>
+              </form>
+            </div>
+
+            <!-- Figures & Progress Bar -->
+            <div class="my-3">
+              <div class="d-flex justify-content-between align-items-baseline mb-1">
+                <span class="text-success fw-bold">{{ currency }}{{ "%.2f"|format(goal.saved_amount) }} saved</span>
+                <span class="text-secondary small">{{ currency }}{{ "%.2f"|format(goal.remaining) }} left</span>
+              </div>
+              <div class="progress-bar-custom mb-2">
+                <div class="progress-fill progress-normal" data-progress-width="{{ goal.percentage }}" style="width: 0%;"></div>
+              </div>
+              <p class="small text-secondary mb-0">
+                You're <strong class="text-warning">{{ goal.percentage }}%</strong> toward your goal.
+              </p>
+            </div>
+          </div>
+
+          <!-- Quick Deposit / Add Funds Action Form -->
+          <div class="mt-3 pt-3 border-top border-secondary border-opacity-25">
+            <form action="{{ url_for('update_savings_amount') }}" method="POST" class="d-flex gap-2">
+              <input type="hidden" name="goal_id" value="{{ goal.id }}">
+              <input type="hidden" name="action" value="add">
+              <div class="input-with-icon flex-grow-1">
+                <i class="fas fa-plus small input-icon-left"></i>
+                <input type="number" step="0.01" min="1" name="amount" class="form-input-custom py-1" style="font-size:0.85rem;" placeholder="Add funds (₹)" required>
+              </div>
+              <button type="submit" class="btn btn-sm btn-success-smart">Deposit</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state-box">
+    <div class="empty-icon">🎯</div>
+    <h4 class="empty-title text-white">No savings goal yet</h4>
+    <p class="empty-desc">Create your first savings goal and start tracking your path toward a new gadget, semester fee, or emergency cushion.</p>
+  </div>
+{% endif %}
+{% endblock %}

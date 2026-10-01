@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Budget Management – PocketSmart AI{% endblock %}
+{% block page_title %}Monthly Budgets{% endblock %}
+{% block page_subtitle %}Set spending limits for different categories to prevent overspending.{% endblock %}
+
+{% block content %}
+<!-- Budget Summary Banner -->
+<div class="glass-panel p-4 mb-4">
+  <div class="row align-items-center g-3">
+    <div class="col-md-7">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <h4 class="text-white mb-0">Budget Overview ({{ current_month }})</h4>
+      </div>
+      <p class="text-secondary small mb-3">Monitoring limits across {{ budget_items|length }} tracked categories.</p>
+
+      <div class="row g-2 text-center">
+        <div class="col-4">
+          <div class="p-2 rounded-3" style="background: rgba(99, 102, 241, 0.1);">
+            <small class="text-secondary d-block">Allocated</small>
+            <strong class="text-white fs-5">{{ currency }}{{ "%.2f"|format(total_budget) }}</strong>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-2 rounded-3" style="background: rgba(239, 68, 68, 0.1);">
+            <small class="text-secondary d-block">Spent</small>
+            <strong class="text-danger fs-5">{{ currency }}{{ "%.2f"|format(total_spent) }}</strong>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-2 rounded-3" style="background: rgba(16, 185, 129, 0.1);">
+            <small class="text-secondary d-block">Remaining</small>
+            <strong class="text-success fs-5">{{ currency }}{{ "%.2f"|format(remaining_total) }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Add Category Budget Form -->
+    <div class="col-md-5 border-start-md border-secondary border-opacity-25 ps-md-4">
+      <h5 class="text-white mb-3"><i class="fas fa-plus-circle text-primary me-2"></i>Set Category Budget</h5>
+      <form action="{{ url_for('add_budget') }}" method="POST">
+        <input type="hidden" name="month" value="{{ current_month }}">
+        <div class="form-group-custom mb-2">
+          <select name="category" class="form-input-custom ps-3" required>
+            <option value="" disabled selected>Select category...</option>
+            {% for cat in categories %}
+              <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group-custom mb-3">
+          <div class="input-with-icon">
+            <i class="fas fa-money-bill-wave input-icon-left"></i>
+            <input type="number" step="0.01" min="1" name="budget_amount" class="form-input-custom" placeholder="Budget Amount (e.g. 5000)" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary-smart w-100 justify-content-center">
+          <i class="fas fa-check"></i> Save Budget
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Category Budgets Grid -->
+{% if budget_items %}
+  <div class="row g-4 mb-4">
+    {% for item in budget_items %}
+      <div class="col-md-6 col-lg-4">
+        <div class="glass-panel p-4 h-100 d-flex flex-direction-column justify-content-between">
+          <div>
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="cat-badge cat-{{ item.category }} fs-6 px-3 py-1">
+                <i class="fas fa-tag small"></i> {{ item.category }}
+              </span>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+                  <li>
+                    <button class="dropdown-item text-white" data-bs-toggle="modal" data-bs-target="#editBudgetModal{{ item.id }}">
+                      <i class="fas fa-pen me-2 text-primary"></i> Edit Amount
+                    </button>
+                  </li>
+                  <li>
+                    <form action="{{ url_for('delete_budget', budget_id=item.id) }}" method="POST">
+                      <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Delete budget limit for {{ item.category }}?')">
+                        <i class="fas fa-trash me-2"></i> Delete
+                      </button>
+                    </form>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Spending Figures -->
+            <div class="my-3">
+              <div class="d-flex justify-content-between align-items-baseline mb-1">
+                <span class="text-secondary small">Spent: {{ currency }}{{ "%.2f"|format(item.spent) }}</span>
+                <span class="text-white fw-bold">Limit: {{ currency }}{{ "%.2f"|format(item.budget_amount) }}</span>
+              </div>
+              <div class="progress-bar-custom mb-2">
+                <div class="progress-fill {% if item.status == 'exceeded' %}progress-danger{% elif item.status == 'warning' %}progress-warning{% else %}progress-normal{% endif %}"
+                     data-progress-width="{{ item.percentage }}" style="width: 0%;"></div>
+              </div>
+              <div class="d-flex justify-content-between small">
+                <span class="{% if item.status == 'exceeded' %}text-danger fw-bold{% elif item.status == 'warning' %}text-warning{% else %}text-secondary{% endif %}">
+                  {{ item.percentage }}% Used
+                </span>
+                <span class="text-success">
+                  Remaining: {{ currency }}{{ "%.2f"|format(item.remaining) }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status Message Alert Footer -->
+          <div class="mt-2 pt-2 border-top border-secondary border-opacity-25">
+            <small class="d-block {% if item.status == 'exceeded' %}text-danger fw-semibold{% elif item.status == 'warning' %}text-warning fw-semibold{% else %}text-secondary{% endif %}">
+              <i class="fas {% if item.status == 'exceeded' %}fa-exclamation-triangle{% elif item.status == 'warning' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} me-1"></i>
+              {{ item.status_message }}
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Modal for this budget -->
+      <div class="modal fade" id="editBudgetModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content glass-panel border-0 text-white" style="background: rgba(17, 24, 39, 0.95); backdrop-filter: blur(20px);">
+            <div class="modal-header border-secondary border-opacity-25">
+              <h5 class="modal-title">Edit {{ item.category }} Budget</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('edit_budget', budget_id=item.id) }}" method="POST">
+              <div class="modal-body">
+                <div class="form-group-custom">
+                  <label class="form-label-custom">New Budget Limit ({{ currency }})</label>
+                  <input type="number" step="0.01" min="1" name="budget_amount" class="form-input-custom" value="{{ item.budget_amount }}" required>
+                </div>
+              </div>
+              <div class="modal-footer border-secondary border-opacity-25">
+                <button type="button" class="btn btn-outline-smart" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary-smart">Update Limit</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Budget vs Spent Comparison Chart -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div>
+        <h4 class="chart-title">Budget vs Actual Spending</h4>
+        <small class="text-secondary">Side-by-side comparison across all tracked categories</small>
+      </div>
+    </div>
+    <div class="chart-canvas-wrapper">
+      <canvas id="budgetComparisonChart"></canvas>
+    </div>
+  </div>
+{% else %}
+  <div class="empty-state-box">
+    <div class="empty-icon">💰</div>
+    <h4 class="empty-title text-white">No budget created yet</h4>
+    <p class="empty-desc">Create a monthly budget for Food, Travel, or Shopping to track spending limits and receive alerts.</p>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}

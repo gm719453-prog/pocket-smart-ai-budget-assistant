@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}🤖 PocketSmart AI Insights{% endblock %}
+{% block page_title %}🤖 PocketSmart AI Insights{% endblock %}
+{% block page_subtitle %}Get simple AI-generated insights from your recorded spending.{% endblock %}
+
+{% block content %}
+<!-- AI Generation Action Header Card -->
+<div class="glass-panel p-4 mb-4 position-relative overflow-hidden">
+  <div class="row align-items-center g-3">
+    <div class="col-md-7">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <div class="stat-icon-badge badge-usage" style="width: 44px; height: 44px; font-size: 1.25rem;">
+          <i class="fas fa-sparkles text-primary"></i>
+        </div>
+        <h4 class="text-white mb-0">Google Gemini Spending Analysis</h4>
+      </div>
+      <p class="text-secondary small mb-0">
+        Our AI assistant reviews your recorded expenses, monthly income ({{ currency }}{{ "%.2f"|format(summary.income) }}), and category budgets to generate practical, personalized tips.
+      </p>
+    </div>
+    <div class="col-md-5 text-md-end">
+      <div class="d-flex flex-column flex-sm-row justify-content-md-end gap-2">
+        <button id="generateAiBtn" class="btn btn-primary-smart px-4 py-2 justify-content-center">
+          <i class="fas fa-robot"></i> <span>Generate AI Insights</span>
+        </button>
+        <!-- Simulation Button for College Project Review Testing -->
+        <button id="simulate429Btn" class="btn btn-outline-smart px-3 py-2 justify-content-center" title="Demonstrate HTTP 429 Quota Exceeded handling for college project viva">
+          <i class="fas fa-vial text-warning"></i> Simulate 429
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State Container (Hidden by default) -->
+<div id="aiLoadingContainer" class="glass-panel p-5 text-center mb-4 d-none">
+  <div class="spinner-grow text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <h4 class="text-white">🤖 Analyzing your spending...</h4>
+  <p class="text-secondary small max-w-500 mx-auto">Evaluating category trends, budget thresholds, and savings targets with Google Gemini.</p>
+</div>
+
+<!-- Error State (e.g. 429 / RESOURCE_EXHAUSTED / Quota) -->
+<div id="aiErrorContainer" class="glass-panel p-4 mb-4 border-warning border-opacity-50 d-none" style="background: rgba(245, 158, 11, 0.08);">
+  <div class="d-flex align-items-start gap-3">
+    <div class="fs-2 text-warning">
+      <i class="fas fa-robot"></i>
+    </div>
+    <div class="flex-grow-1">
+      <h5 class="text-white mb-1">AI temporarily unavailable</h5>
+      <p id="aiErrorMessage" class="text-secondary mb-3">
+        🤖 AI recommendations are temporarily unavailable.<br>
+        Please try again after a few minutes.
+      </p>
+      <div class="d-flex flex-wrap gap-2">
+        <button id="retryAiBtn" class="btn btn-sm btn-primary-smart">
+          <i class="fas fa-redo-alt me-1"></i> Try Again
+        </button>
+        <span class="small text-muted align-self-center ms-2">
+          Your other PocketSmart features (Expenses, Budgets, Savings) continue to work normally.
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dynamic AI Insights Output Card (Populated after generation) -->
+<div id="aiResultContainer" class="d-none mb-4">
+  <div class="glass-panel p-4 position-relative">
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+      <div class="d-flex align-items-center gap-2">
+        <span id="resultBadge" class="badge bg-primary bg-opacity-25 text-primary px-3 py-2 rounded-pill">
+          <i class="fas fa-check-circle me-1"></i> Gemini AI Analysis
+        </span>
+        <span id="resultDate" class="text-secondary small">Just now</span>
+      </div>
+    </div>
+
+    <!-- Section 1: Spending Summary -->
+    <div class="mb-4">
+      <h5 id="summaryHeading" class="text-white mb-2"><i class="fas fa-file-invoice-dollar text-primary me-2"></i>AI Spending Summary</h5>
+      <div id="summaryContent" class="text-secondary" style="line-height: 1.8; white-space: pre-line;"></div>
+    </div>
+
+    <!-- Section 2: Suggested Actions -->
+    <div class="mb-4">
+      <h5 id="suggestionsHeading" class="text-white mb-2"><i class="fas fa-lightbulb text-warning me-2"></i>Suggested Actions</h5>
+      <div id="suggestionsContent" class="text-secondary" style="line-height: 1.8; white-space: pre-line;"></div>
+    </div>
+
+    <!-- Mandatory Disclaimer -->
+    <div class="p-3 rounded-3 mt-4" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color);">
+      <small class="text-muted d-block">
+        <i class="fas fa-info-circle me-1"></i>
+        <span id="disclaimerText">AI suggestions are for general informational purposes and are not professional financial advice.</span>
+      </small>
+    </div>
+  </div>
+</div>
+
+<!-- Past Recommendation History -->
+<div class="glass-panel p-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="text-white mb-0"><i class="fas fa-history text-secondary me-2"></i>Recent Recommendation History</h5>
+    <small class="text-muted">Saved insights</small>
+  </div>
+
+  {% if past_recommendations %}
+    <div class="d-flex flex-column gap-3">
+      {% for rec in past_recommendations %}
+        <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color);">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge {% if rec.source_type == 'basic_fallback' %}bg-info bg-opacity-25 text-info{% else %}bg-primary bg-opacity-25 text-primary{% endif %} rounded-pill">
+              {% if rec.source_type == 'basic_fallback' %}Basic spending summary{% else %}Gemini AI{% endif %}
+            </span>
+            <small class="text-muted">{{ rec.created_at }}</small>
+          </div>
+          <div class="text-secondary small" style="white-space: pre-line; line-height: 1.6;">
+            {{ rec.recommendation_text }}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-4 text-muted">
+      <i class="fas fa-robot fs-3 mb-2 d-block opacity-50"></i>
+      <p class="small mb-0">No past AI recommendation history yet. Click <strong>Generate AI Insights</strong> above to analyze your finances.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const generateBtn = document.getElementById("generateAiBtn");
+  const simulateBtn = document.getElementById("simulate429Btn");
+  const retryBtn = document.getElementById("retryAiBtn");
+  const loadingContainer = document.getElementById("aiLoadingContainer");
+  const errorContainer = document.getElementById("aiErrorContainer");
+  const errorMessage = document.getElementById("aiErrorMessage");
+  const resultContainer = document.getElementById("aiResultContainer");
+  const summaryContent = document.getElementById("summaryContent");
+  const suggestionsContent = document.getElementById("suggestionsContent");
+  const summaryHeading = document.getElementById("summaryHeading");
+  const suggestionsHeading = document.getElementById("suggestionsHeading");
+  const resultBadge = document.getElementById("resultBadge");
+  const disclaimerText = document.getElementById("disclaimerText");
+
+  let isRequestRunning = false;
+
+  function triggerAiRequest(simulate429 = false) {
+    if (isRequestRunning) return; // Prevent duplicate clicks
+    isRequestRunning = true;
+
+    // UI State: Loading
+    generateBtn.disabled = true;
+    if (simulateBtn) simulateBtn.disabled = true;
+    loadingContainer.classList.remove("d-none");
+    errorContainer.classList.add("d-none");
+    resultContainer.classList.add("d-none");
+
+    const endpoint = `/recommendations/generate${simulate429 ? '?simulate_429=true' : ''}`;
+
+    fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    })
+    .then(async response => {
+      const data = await response.json();
+      return { ok: response.ok, status: response.status, data };
+    })
+    .then(({ ok, status, data }) => {
+      loadingContainer.classList.add("d-none");
+
+      if (data.success && data.is_ai) {
+        // AI Success
+        summaryHeading.innerHTML = '<i class="fas fa-file-invoice-dollar text-primary me-2"></i>AI Spending Summary';
+        suggestionsHeading.innerHTML = '<i class="fas fa-lightbulb text-warning me-2"></i>Suggested Actions';
+        resultBadge.className = "badge bg-primary bg-opacity-25 text-primary px-3 py-2 rounded-pill";
+        resultBadge.innerHTML = '<i class="fas fa-check-circle me-1"></i> Gemini AI Analysis';
+        
+        summaryContent.textContent = data.summary;
+        suggestionsContent.textContent = data.suggestions;
+        disclaimerText.textContent = data.disclaimer || "AI suggestions are for general informational purposes and are not professional financial advice.";
+        resultContainer.classList.remove("d-none");
+        window.showToast("AI Insights generated successfully!", "success");
+      } else {
+        // Handle Error Gracefully (429, timeout, missing key, etc.)
+        errorContainer.classList.remove("d-none");
+        errorMessage.innerHTML = (data.message || "🤖 AI recommendations are temporarily unavailable.<br>Please try again after a few minutes.").replace(/\n/g, "<br>");
+
+        // If local fallback summary is available, render it cleanly
+        if (data.fallback_available && data.fallback_data) {
+          const fb = data.fallback_data;
+          summaryHeading.innerHTML = '<i class="fas fa-chart-bar text-info me-2"></i>Basic spending summary';
+          suggestionsHeading.innerHTML = '<i class="fas fa-tasks text-success me-2"></i>Practical Suggestions';
+          resultBadge.className = "badge bg-info bg-opacity-25 text-info px-3 py-2 rounded-pill";
+          resultBadge.innerHTML = '<i class="fas fa-calculator me-1"></i> Basic Spending Summary (Non-AI)';
+          
+          summaryContent.textContent = fb.summary;
+          suggestionsContent.textContent = fb.suggestions;
+          disclaimerText.textContent = fb.disclaimer;
+          resultContainer.classList.remove("d-none");
+        }
+      }
+    })
+    .catch(err => {
+      loadingContainer.classList.add("d-none");
+      errorContainer.classList.remove("d-none");
+      errorMessage.innerHTML = "🤖 AI recommendations are temporarily unavailable.<br>Please try again after a few minutes.";
+    })
+    .finally(() => {
+      isRequestRunning = false;
+      generateBtn.disabled = false;
+      if (simulateBtn) simulateBtn.disabled = false;
+    });
+  }
+
+  if (generateBtn) {
+    generateBtn.addEventListener("click", () => triggerAiRequest(false));
+  }
+
+  if (simulateBtn) {
+    simulateBtn.addEventListener("click", () => triggerAiRequest(true));
+  }
+
+  if (retryBtn) {
+    retryBtn.addEventListener("click", () => triggerAiRequest(false));
+  }
+});
+</script>
+{% endblock %}
