@@ -177,7 +177,7 @@ mysql -u root -p < database/schema.sql
 
 ---
 
-## 🏃 6. Running the Application
+## 🏃 6. Running the Application Locally
 
 Start the Flask development server:
 ```bash
@@ -187,6 +187,44 @@ Open your browser and navigate to:
 ```text
 http://127.0.0.1:5000/
 ```
+
+---
+
+## ☁️ 6.1 Vercel Production Deployment Guide
+
+Follow these exact steps to deploy the application to Vercel:
+
+1. **Push latest code to GitHub:**
+   ```bash
+   git add .
+   git commit -m "prep: vercel deployment configuration"
+   git push origin master
+   ```
+2. **Open Vercel:** Go to [vercel.com](https://vercel.com) and log in with your GitHub account.
+3. **Import Repository:** Click **Add New... -> Project** and select `pocket-smart-ai-budget-assistant`.
+4. **Select Project Settings:** Vercel automatically detects [`vercel.json`](file:///c:/Users/sathi/OneDrive/Desktop/pocketSmart%20Ai%20Budget%20assistant/vercel.json) and uses `@vercel/python`.
+5. **Configure Environment Variables:** Add the following in Vercel's Environment Variables tab:
+   - `SECRET_KEY` = `(your random secret key)`
+   - `GEMINI_API_KEY` = `(your Gemini API key)`
+   - `GOOGLE_CLIENT_ID` = `(your Google OAuth Client ID)`
+   - `GOOGLE_CLIENT_SECRET` = `(your Google OAuth Client Secret)`
+   - `DB_HOST` = `(your cloud MySQL database host)`
+   - `DB_PORT` = `3306`
+   - `DB_USER` = `(your cloud MySQL username)`
+   - `DB_PASSWORD` = `(your cloud MySQL password)`
+   - `DB_NAME` = `pocketsmart`
+   - `SESSION_COOKIE_SECURE` = `True`
+6. **Configure Production Database:** Initialize tables on your cloud MySQL database using [`database/schema.sql`](file:///c:/Users/sathi/OneDrive/Desktop/pocketSmart%20Ai%20Budget%20assistant/database/schema.sql).
+7. **Deploy:** Click **Deploy**. Vercel will build and launch your application.
+8. **Open Deployed URL:** Access your live URL (e.g., `https://pocket-smart-ai-budget-assistant.vercel.app`).
+9. **Test `/health`:** Verify `https://your-domain.vercel.app/health` returns `{"app": "PocketSmart AI", "status": "ok"}`.
+10. **Test Login & Signup:** Register a test account or log in with credentials.
+11. **Test Dashboard:** Verify balances, metric cards, and Chart.js graphs render.
+12. **Test Expenses:** Log a transaction and test search, filtering, and deletion.
+13. **Test Budget:** Add category limits and verify status progress bars.
+14. **Test Savings:** Create a goal and deposit funds.
+15. **Test AI Insights:** Generate AI recommendations via Gemini and test rate-limit fallback.
+16. **Configure Google OAuth Redirect URI:** Add `https://your-domain.vercel.app/auth/google/callback` under Authorized Redirect URIs in Google Cloud Console.
 
 ---
 
