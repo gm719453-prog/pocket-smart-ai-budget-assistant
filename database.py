@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import logging
+import tempfile
 from contextlib import contextmanager
 from config import Config
 
@@ -9,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Determine primary engine
 _USE_SQLITE = False
-_SQLITE_PATH = os.path.join(os.path.dirname(__file__), "pocketsmart_local.db")
+_SQLITE_PATH = os.path.join(tempfile.gettempdir(), "pocketsmart_local.db")
 
 def test_mysql_connection():
     """Test MySQL connection using config credentials."""
@@ -74,78 +75,81 @@ def init_db():
         _USE_SQLITE = True
 
     # SQLite fallback initialization
-    logger.info(f"Using SQLite database at {_SQLITE_PATH}")
-    conn = sqlite3.connect(_SQLITE_PATH)
-    cursor = conn.cursor()
-    cursor.executescript("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        password_hash TEXT NULL,
-        google_id TEXT NULL UNIQUE,
-        profile_image TEXT DEFAULT '/static/images/default-avatar.svg',
-        monthly_income REAL DEFAULT 0.0,
-        currency TEXT DEFAULT '₹',
-        theme TEXT DEFAULT 'dark',
-        notifications_enabled INTEGER DEFAULT 1,
-        ai_insights_enabled INTEGER DEFAULT 1,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+    try:
+        logger.info(f"Using SQLite database at {_SQLITE_PATH}")
+        conn = sqlite3.connect(_SQLITE_PATH)
+        cursor = conn.cursor()
+        cursor.executescript("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            password_hash TEXT NULL,
+            google_id TEXT NULL UNIQUE,
+            profile_image TEXT DEFAULT '/static/images/default-avatar.svg',
+            monthly_income REAL DEFAULT 0.0,
+            currency TEXT DEFAULT '₹',
+            theme TEXT DEFAULT 'dark',
+            notifications_enabled INTEGER DEFAULT 1,
+            ai_insights_enabled INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
 
-    CREATE TABLE IF NOT EXISTS expenses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        amount REAL NOT NULL,
-        category TEXT NOT NULL,
-        description TEXT NOT NULL,
-        expense_date TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
+        CREATE TABLE IF NOT EXISTS expenses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            amount REAL NOT NULL,
+            category TEXT NOT NULL,
+            description TEXT NOT NULL,
+            expense_date TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
 
-    CREATE TABLE IF NOT EXISTS budgets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        category TEXT NOT NULL,
-        budget_amount REAL NOT NULL,
-        month TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE (user_id, category, month),
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
+        CREATE TABLE IF NOT EXISTS budgets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            category TEXT NOT NULL,
+            budget_amount REAL NOT NULL,
+            month TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (user_id, category, month),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
 
-    CREATE TABLE IF NOT EXISTS savings_goals (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        goal_name TEXT NOT NULL,
-        target_amount REAL NOT NULL,
-        saved_amount REAL DEFAULT 0.0,
-        target_date TEXT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
+        CREATE TABLE IF NOT EXISTS savings_goals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            goal_name TEXT NOT NULL,
+            target_amount REAL NOT NULL,
+            saved_amount REAL DEFAULT 0.0,
+            target_date TEXT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
 
-    CREATE TABLE IF NOT EXISTS ai_recommendations (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        recommendation_text TEXT NOT NULL,
-        source_type TEXT DEFAULT 'gemini',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
+        CREATE TABLE IF NOT EXISTS ai_recommendations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            recommendation_text TEXT NOT NULL,
+            source_type TEXT DEFAULT 'gemini',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
 
-    CREATE TABLE IF NOT EXISTS password_resets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        token TEXT NOT NULL,
-        expires_at TIMESTAMP NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
-    """)
-    conn.commit()
-    conn.close()
+        CREATE TABLE IF NOT EXISTS password_resets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            token TEXT NOT NULL,
+            expires_at TIMESTAMP NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        """)
+        conn.commit()
+        conn.close()
+    except Exception as sq_err:
+        logger.error(f"SQLite fallback initialization warning: {sq_err}")
 
 def get_connection():
     """Returns a database connection based on active engine."""
