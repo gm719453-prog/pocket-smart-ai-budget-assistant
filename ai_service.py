@@ -22,16 +22,15 @@ except ImportError:
     logger.warning("google-genai package is not installed. Run: pip install google-genai")
 
 # Primary model — override with GEMINI_MODEL env var if needed
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 
-# Fallback chain: if primary model is overloaded (503), try these in order
+# Fallback chain: if primary model is overloaded (503) or unavailable, try these in order
 MODEL_FALLBACK_CHAIN = [
-    "gemini-3.5-flash",
-    "gemini-3.6-flash",
-    "gemini-3.7-flash",
     "gemini-3.8-flash",
+    "gemini-3.5-flash",
     "gemini-flash-latest",
 ]
+
 
 
 def build_spending_summary_data(user_id):
@@ -209,14 +208,21 @@ def get_ai_recommendations(user_id, simulate_429=False):
     if data["total_expenses"] == 0 and data["income"] == 0:
         return {
             "success": False,
-            "status_code": 400,
+            "status_code": 200,
             "is_ai": False,
             "error_type": "insufficient_data",
             "message": "Add some expenses or set your monthly income first to receive AI insights.",
             "summary": "",
             "suggestions": "",
-            "fallback_available": False,
-            "fallback_data": None
+            "fallback_available": True,
+            "fallback_data": {
+                "status": "guidance",
+                "title": "Welcome to PocketSmart AI Insights",
+                "is_ai": False,
+                "summary": "• No financial records or monthly income have been set for this month yet.",
+                "suggestions": "• Head over to the Income page to set your monthly earnings.\n• Log your daily transactions in Expenses to receive spending breakdown.\n• Or click 'Seed Demo Data' in Settings or Dashboard to instantly explore AI insights.",
+                "disclaimer": "AI recommendations will automatically generate once you add income or expense entries."
+            }
         }
 
     # ---------------------------------------------------------------
@@ -304,13 +310,9 @@ Keep the tone encouraging, objective, and beginner-friendly."""
                 logger.info(f"Gemini responded successfully using model: {model_name}")
                 break  # success — stop trying
             except Exception as model_exc:
-                err_msg = str(model_exc)
-                if "503" in err_msg or "UNAVAILABLE" in err_msg or "high demand" in err_msg.lower():
-                    logger.warning(f"Model {model_name} overloaded (503), trying next fallback...")
-                    last_error = model_exc
-                    continue  # try next model
-                else:
-                    raise  # non-503 error — bubble up to outer except
+                logger.warning(f"Model {model_name} attempt failed ({model_exc}), trying next model in chain...")
+                last_error = model_exc
+                continue  # try next model in fallback chain
 
         if response is None:
             raise last_error or ValueError("All Gemini models are currently unavailable.")

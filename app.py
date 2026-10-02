@@ -768,6 +768,8 @@ def recommendations():
     """Renders the AI Insights view with past recommendation history."""
     user_id = session["user_id"]
     summary = build_spending_summary_data(user_id)
+    user = query_db("SELECT ai_insights_enabled FROM users WHERE id = %s", (user_id,), one=True)
+    ai_enabled = bool(user.get("ai_insights_enabled", 1)) if user else True
     
     # Retrieve past AI recommendations stored in DB
     past_recs = query_db(
@@ -778,7 +780,8 @@ def recommendations():
     return render_template(
         "recommendations.html",
         summary=summary,
-        past_recommendations=past_recs
+        past_recommendations=past_recs,
+        ai_enabled=ai_enabled
     )
 
 @app.route("/recommendations/generate", methods=["POST"])
@@ -789,8 +792,30 @@ def generate_recommendations():
     Strictly shields against 429 / RESOURCE_EXHAUSTED / timeouts without crashing.
     """
     user_id = session["user_id"]
+    user = query_db("SELECT ai_insights_enabled FROM users WHERE id = %s", (user_id,), one=True)
+    if user and user.get("ai_insights_enabled") == 0:
+        return jsonify({
+            "success": False,
+            "status_code": 200,
+            "is_ai": False,
+            "error_type": "disabled_in_settings",
+            "message": "AI Insights are currently turned off in your Settings. Please go to Settings and enable 'AI Insights' to generate recommendations.",
+            "summary": "",
+            "suggestions": "",
+            "fallback_available": True,
+            "fallback_data": {
+                "status": "guidance",
+                "title": "AI Insights Disabled in Settings",
+                "is_ai": False,
+                "summary": "• AI Insights preference is currently toggled OFF in your account Settings.",
+                "suggestions": "• Navigate to Settings in the navigation bar.\n• Turn ON the 'AI Insights' toggle switch and click 'Save Settings'.",
+                "disclaimer": "You can re-enable AI features anytime from your profile settings page."
+            }
+        }), 200
+
+    req_json = request.get_json(silent=True) or {}
     simulate_429 = request.args.get("simulate_429", "false").lower() == "true" or \
-                   request.json and request.json.get("simulate_429") is True
+                   req_json.get("simulate_429") is True
                    
     # Call AI service
     result = get_ai_recommendations(user_id, simulate_429=simulate_429)
@@ -902,7 +927,16 @@ def reset_data():
     return redirect(url_for("dashboard"))
 
 # ============================================================
-# 9. ERROR HANDLERS
+# 9. HEALTH CHECK
+# ============================================================
+
+@app.route("/health")
+def health_check():
+    """Production health check endpoint. Returns status ok without exposing secrets."""
+    return jsonify({"status": "ok", "app": "PocketSmart AI"}), 200
+
+# ============================================================
+# 10. ERROR HANDLERS
 # ============================================================
 
 @app.errorhandler(404)
