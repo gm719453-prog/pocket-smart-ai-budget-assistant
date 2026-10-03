@@ -134,5 +134,30 @@ class PocketSmartTestCase(unittest.TestCase):
         self.assertTrue(res_data['fallback_available'])
         self.assertIn('Basic spending summary', res_data['fallback_data']['title'])
 
+    def test_05_income_persistence_and_dashboard_display(self):
+        """
+        Test Income update persistence and Dashboard card rendering.
+        Ensures monthly_income updates DB and displays accurately on dashboard.
+        """
+        # Sign up
+        self.client.post('/signup', data={
+            'name': 'Income Tester',
+            'email': 'teststudent@example.com',
+            'password': 'password123',
+            'confirm_password': 'password123'
+        }, follow_redirects=True)
+
+        # Update Income to ₹35,000
+        res_update = self.client.post('/income/update', data={'income': '35000'}, follow_redirects=True)
+        self.assertEqual(res_update.status_code, 200)
+
+        # Assert income amount displays in dashboard response
+        self.assertIn(b"35000", res_update.data)
+
+        # Query database to verify persistence
+        user = query_db("SELECT monthly_income FROM users WHERE email = %s", ("teststudent@example.com",), one=True)
+        self.assertIsNotNone(user)
+        self.assertEqual(float(user["monthly_income"]), 35000.0)
+
 if __name__ == '__main__':
     unittest.main()
