@@ -226,9 +226,9 @@ def get_ai_recommendations(user_id, simulate_429=False):
         }
 
     # ---------------------------------------------------------------
-    # API key check — log warning but never expose the key value
+    # API key check — read os.environ.get("GEMINI_API_KEY") at request time
     # ---------------------------------------------------------------
-    api_key = Config.GEMINI_API_KEY
+    api_key = (os.environ.get("GEMINI_API_KEY") or Config.GEMINI_API_KEY or "").strip()
     if not api_key:
         logger.warning("GEMINI_API_KEY is not configured in environment variables.")
         return {
@@ -236,7 +236,7 @@ def get_ai_recommendations(user_id, simulate_429=False):
             "status_code": 401,
             "is_ai": False,
             "error_type": "missing_api_key",
-            "message": "AI service is not configured. Please add your GEMINI_API_KEY to the .env file.",
+            "message": "AI service is not configured. Please set the GEMINI_API_KEY environment variable in your Vercel project settings (or .env file for local development).",
             "summary": "",
             "suggestions": "",
             "fallback_available": True,

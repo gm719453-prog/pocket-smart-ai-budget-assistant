@@ -17,7 +17,7 @@ class Config:
     DB_NAME = os.getenv("DB_NAME") or os.getenv("MYSQLDATABASE") or "pocketsmart"
 
     # Google Gemini AI settings
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 
     # Google OAuth 2.0 settings
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
