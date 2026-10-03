@@ -220,17 +220,30 @@ def execute_db(query, args=(), return_last_id=False):
     is_sqlite = isinstance(conn, sqlite3.Connection)
     cur = conn.cursor() if is_sqlite else conn.cursor()
     last_id = None
+    affected_rows = 0
     try:
         if is_sqlite:
             sqlite_query = query.replace("%s", "?")
             cur.execute(sqlite_query, args)
             conn.commit()
             last_id = cur.lastrowid
+            affected_rows = cur.rowcount
         else:
             cur.execute(query, args)
-            conn.commit()
-            last_id = cur.lastrowid
-        return last_id if return_last_id else cur.rowcount
+            try:
+                conn.commit()
+            except Exception:
+                pass
+            last_id = getattr(cur, "lastrowid", None)
+            affected_rows = cur.rowcount
+        return last_id if return_last_id else affected_rows
+    except Exception as err:
+        logger.error(f"execute_db query error: {err}")
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        raise
     finally:
         try:
             cur.close()

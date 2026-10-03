@@ -9,12 +9,29 @@ class Config:
     """Base application configuration."""
     SECRET_KEY = os.getenv("SECRET_KEY", "pocketsmart_secure_fallback_key_2026")
 
-    # Database settings — environment variables with Railway MYSQL* fallback
-    DB_HOST = os.getenv("DB_HOST") or os.getenv("MYSQLHOST") or "localhost"
-    DB_PORT = int(os.getenv("DB_PORT") or os.getenv("MYSQLPORT") or 3306)
-    DB_USER = os.getenv("DB_USER") or os.getenv("MYSQLUSER") or "root"
-    DB_PASSWORD = os.getenv("DB_PASSWORD") or os.getenv("MYSQLPASSWORD") or ""
-    DB_NAME = os.getenv("DB_NAME") or os.getenv("MYSQLDATABASE") or "pocketsmart"
+    # Database settings — support full connection strings (DATABASE_URL/MYSQL_URL) & individual env vars
+    _db_url = os.getenv("DATABASE_URL") or os.getenv("MYSQL_URL") or os.getenv("JAWSDB_URL") or os.getenv("CLEARDB_DATABASE_URL")
+    if _db_url:
+        try:
+            from urllib.parse import urlparse
+            _url = urlparse(_db_url)
+            DB_HOST = _url.hostname or "localhost"
+            DB_PORT = _url.port or 3306
+            DB_USER = _url.username or "root"
+            DB_PASSWORD = _url.password or ""
+            DB_NAME = (_url.path or "").lstrip("/") or "pocketsmart"
+        except Exception:
+            DB_HOST = os.getenv("DB_HOST") or os.getenv("MYSQLHOST") or "localhost"
+            DB_PORT = int((os.getenv("DB_PORT") or os.getenv("MYSQLPORT") or "3306").strip() or 3306)
+            DB_USER = os.getenv("DB_USER") or os.getenv("MYSQLUSER") or "root"
+            DB_PASSWORD = os.getenv("DB_PASSWORD") or os.getenv("MYSQLPASSWORD") or ""
+            DB_NAME = os.getenv("DB_NAME") or os.getenv("MYSQLDATABASE") or "pocketsmart"
+    else:
+        DB_HOST = os.getenv("DB_HOST") or os.getenv("MYSQLHOST") or "localhost"
+        DB_PORT = int((os.getenv("DB_PORT") or os.getenv("MYSQLPORT") or "3306").strip() or 3306)
+        DB_USER = os.getenv("DB_USER") or os.getenv("MYSQLUSER") or "root"
+        DB_PASSWORD = os.getenv("DB_PASSWORD") or os.getenv("MYSQLPASSWORD") or ""
+        DB_NAME = os.getenv("DB_NAME") or os.getenv("MYSQLDATABASE") or "pocketsmart"
 
     # Google Gemini AI settings
     GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()

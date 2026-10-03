@@ -348,25 +348,53 @@ def chart_data():
 @login_required
 def income():
     """Displays monthly income overview and update form."""
-    user = query_db("SELECT monthly_income, currency FROM users WHERE id = %s", (session["user_id"],), one=True)
-    income_val = float(user["monthly_income"] or 0.0) if user else 0.0
+    user_id = session.get("user_id")
+    user = query_db("SELECT monthly_income, currency FROM users WHERE id = %s", (user_id,), one=True) if user_id else None
+    income_val = float(user["monthly_income"] or 0.0) if user and user.get("monthly_income") is not None else 0.0
     return render_template("income.html", income=income_val)
 
 @app.route("/income/update", methods=["POST"])
 @login_required
 def update_income():
     """Updates user monthly income."""
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Session expired. Please log in again.", "warning")
+        return redirect(url_for("login"))
+
+    raw_income = request.form.get("income", "").strip()
     try:
-        income_val = float(request.form.get("income", 0))
+        income_val = float(raw_income)
         if income_val < 0:
             flash("Monthly income cannot be negative.", "danger")
             return redirect(url_for("income"))
-            
-        execute_db("UPDATE users SET monthly_income = %s WHERE id = %s", (income_val, session["user_id"]))
-        flash(f"Monthly income updated successfully!", "success")
-    except ValueError:
+    except (ValueError, TypeError):
         flash("Please enter a valid numeric income amount.", "danger")
+        return redirect(url_for("income"))
+
+    try:
+        # Perform UPDATE query
+        rows_updated = execute_db("UPDATE users SET monthly_income = %s WHERE id = %s", (income_val, user_id))
         
+        # Verify persistence and handle missing user row if needed
+        if rows_updated == 0:
+            existing_user = query_db("SELECT id FROM users WHERE id = %s", (user_id,), one=True)
+            if not existing_user:
+                user_email = session.get("email", f"user{user_id}@pocketsmart.local")
+                user_name = session.get("name", "PocketSmart Student")
+                execute_db(
+                    "INSERT INTO users (id, name, email, monthly_income) VALUES (%s, %s, %s, %s)",
+                    (user_id, user_name, user_email, income_val)
+                )
+            else:
+                execute_db("UPDATE users SET monthly_income = %s WHERE id = %s", (income_val, user_id))
+
+        flash("Monthly income updated successfully!", "success")
+    except Exception as e:
+        import logging
+        logging.getLogger("pocketsmart.app").error(f"Failed to update income for user {user_id}: {e}", exc_info=True)
+        flash("An error occurred while saving monthly income. Please try again.", "danger")
+
     return redirect(url_for("dashboard"))
 
 # ============================================================
